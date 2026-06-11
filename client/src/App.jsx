@@ -1,8 +1,17 @@
+import { useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
+import Board from './pages/Board'
+
+function RedirectToLanding() {
+  useEffect(() => {
+    window.location.replace('/landing.html')
+  }, [])
+  return null
+}
 
 const PrivateRoute = ({ children }) => {
   const { token } = useSelector((state) => state.auth)
@@ -12,9 +21,11 @@ const PrivateRoute = ({ children }) => {
 export default function App() {
   return (
     <Routes>
+      <Route path="/" element={<RedirectToLanding />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+      <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+      <Route path="/board" element={<PrivateRoute><Board /></PrivateRoute>} />
     </Routes>
   )
 }

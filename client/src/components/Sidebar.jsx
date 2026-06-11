@@ -1,0 +1,78 @@
+import { Link, useLocation } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
+import { logout } from '../store/authSlice'
+
+
+  const navItems = [
+  { path: '/dashboard', icon: '⊞', label: 'Dashboard' },
+  { path: '/board', icon: '◻', label: 'Kanban Board' },
+  { path: '/sprints', icon: '▷', label: 'Sprints' },
+  { path: '/github', icon: '🐙', label: 'GitHub' },
+  { path: '/team', icon: '◎', label: 'Team' },
+  { path: '/hive', icon: '⬡', label: 'Hive Board' },
+]
+
+
+export default function Sidebar() {
+  const location = useLocation()
+  const dispatch = useDispatch()
+  const { user } = useSelector((state) => state.auth)
+
+  return (
+    <div className="w-56 min-h-screen bg-surface border-r border-border flex flex-col">
+      
+      {/* Logo */}
+      <div className="p-4 border-b border-border">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 bg-accent flex items-center justify-center text-white font-bold text-xs"
+            style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}>
+            D
+          </div>
+          <span className="font-bold text-text">DevHive</span>
+          <span className="text-xs text-muted font-mono ml-1">v1.0</span>
+        </div>
+      </div>
+
+      {/* Nav Items */}
+      <nav className="flex-1 p-2 space-y-0.5">
+        <div className="text-xs text-muted font-mono uppercase tracking-widest px-2 py-2">
+          // workspace
+        </div>
+        {navItems.map((item) => (
+          <Link
+            key={item.path}
+            to={item.path}
+            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
+              location.pathname === item.path
+                ? 'bg-accent/10 text-accent border border-accent/20'
+                : 'text-muted hover:text-text hover:bg-surface2'
+            }`}
+          >
+            <span className="text-base">{item.icon}</span>
+            {item.label}
+          </Link>
+        ))}
+      </nav>
+
+      {/* User */}
+      <div className="p-3 border-t border-border">
+        <div className="flex items-center gap-2.5 px-2 py-2">
+          <div className="w-7 h-7 rounded-lg bg-accent/20 flex items-center justify-center text-accent text-xs font-bold">
+            {user?.name?.charAt(0).toUpperCase() || 'U'}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-xs font-medium text-text truncate">{user?.name || 'User'}</div>
+            <div className="text-xs text-muted truncate">{user?.email || ''}</div>
+          </div>
+          <button
+            onClick={() => dispatch(logout())}
+            className="text-muted hover:text-danger text-xs transition-colors"
+            title="Logout"
+          >
+            ⇥
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
