@@ -34,6 +34,7 @@ app.use(express.json());
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/projects', require('./routes/projects'));
 app.use('/api/tasks', require('./routes/tasks'));
+app.use('/api/webhooks', require('./routes/webHooks'));
 
 // Health check
 app.get('/api/health', (req, res) => {

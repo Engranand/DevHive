@@ -1,8 +1,9 @@
+import { useState, useEffect } from 'react'
+import api from '../services/api'
 import { useSocket } from '../hooks/useSocket'
-import { useState } from 'react'
 import Layout from '../components/Layout'
 
-const initialColumns = {
+const initialColumns = { 
   backlog: {
     id: 'backlog', title: 'Backlog', color: 'text-muted',
     tasks: [
@@ -10,7 +11,9 @@ const initialColumns = {
       { id: 't2', title: 'Add rate limiting', priority: 'medium', assignee: 'RO', tag: 'security' },
       { id: 't3', title: 'Write unit tests', priority: 'low', assignee: 'SN', tag: 'testing' },
     ]
+    
   },
+  
   in_progress: {
     id: 'in_progress', title: 'In Progress', color: 'text-warning',
     tasks: [
@@ -31,7 +34,10 @@ const initialColumns = {
       { id: 't8', title: 'DB schema v2', priority: 'medium', assignee: 'KI', tag: 'database' },
     ]
   }
+  
 }
+
+const PROJECT_ID = '6a2c7ce76ec1258f7b8e9357'
 
 const priorityConfig = {
   critical: { label: 'Critical', color: 'bg-danger/10 text-danger border-danger/20' },
@@ -82,7 +88,7 @@ function TaskCard({ task, onDragStart }) {
       )}
       <div className="text-sm text-text2 mb-2 leading-snug font-medium">{task.title}</div>
       <div className="flex items-center gap-2 mb-2.5">
-        <span className="text-xs text-muted font-mono">#{task.id}</span>
+        <span className="text-xs text-muted font-mono">#{task.shortId || task.id}</span>
         <span className="text-muted">·</span>
         <span className="text-xs text-muted font-mono">Sprint 7</span>
         {task.tag && (
@@ -156,6 +162,55 @@ export default function Board() {
   const [draggingId, setDraggingId] = useState(null)
   const [activeFilter, setActiveFilter] = useState('All')
   const [search, setSearch] = useState('')
+  const [loading, setLoading] = useState(true)
+
+// Fetch real tasks from backend
+useEffect(() => {
+  const fetchTasks = async () => {
+    try {
+      const { data } = await api.get(`/tasks?projectId=${PROJECT_ID}`)
+      
+      // Empty columns banao
+      const grouped = {
+        backlog: { id: 'backlog', title: 'Backlog', color: 'text-muted', tasks: [] },
+        in_progress: { id: 'in_progress', title: 'In Progress', color: 'text-warning', tasks: [] },
+        in_review: { id: 'in_review', title: 'In Review', color: 'text-purple', tasks: [] },
+        done: { id: 'done', title: 'Done', color: 'text-success', tasks: [] },
+      }
+
+      // Har task ko uske status column mein daalo
+      data.tasks.forEach(task => {
+        const initials = task.assignee?.name
+          ? task.assignee.name.slice(0, 2).toUpperCase()
+          : '??'
+
+        const formattedTask = {
+          id: task._id,
+shortId: task._id.slice(-4),
+          title: task.title,
+          priority: task.priority,
+          assignee: initials,
+          tag: task.priority === 'critical' ? 'auth' : 'general',
+          githubPR: task.githubPRUrl ? task.githubPRUrl.split('/').pop() : null,
+          blocked: task.status === 'in_review' && task.priority === 'critical',
+        }
+
+        if (grouped[task.status]) {
+          grouped[task.status].tasks.push(formattedTask)
+        }
+      })
+
+      setColumns(grouped)
+    } catch (err) {
+      console.error('Failed to fetch tasks:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  fetchTasks()
+}, [])
+
 
   // Socket.io — real-time sync
   const socketRef = useSocket('project-atlas-001', (data) => {
@@ -186,6 +241,9 @@ export default function Board() {
     e.dataTransfer.dropEffect = 'move'
   }
 
+
+  //on drop jo task move hua hai, usko backend ko bhi batao via socket emit, taki dusre clients ko pata chale
+
   const onDrop = (e, targetColumnId) => {
     e.preventDefault()
     if (!draggingId) return
@@ -210,14 +268,20 @@ export default function Board() {
         newCols[targetColumnId].tasks.push(movedTask)
         if (socket && sourceColumnId !== targetColumnId) {
           socket.emit('task_moved', {
+            
             taskId: movedTask.id,
             from: sourceColumnId,
             to: targetColumnId,
             task: movedTask,
             projectId: 'project-atlas-001'
+            
           })
         }
       }
+         if (sourceColumnId !== targetColumnId) {
+          api.patch(`/tasks/${movedTask.id}`, { status: targetColumnId })
+        .catch(err => console.error('Failed to update task:', err))
+        }
 
       return newCols
     })
@@ -229,6 +293,16 @@ export default function Board() {
   const doneTasks = columns.done.tasks.length
   const blockedTasks = Object.values(columns).flatMap(c => c.tasks).filter(t => t.blocked).length
   const aiRiskTasks = Object.values(columns).flatMap(c => c.tasks).filter(t => workloadInfo[t.assignee]?.risk).length
+
+if (loading) {
+  return (
+    <Layout>
+      <div className="p-6">
+        Loading tasks...
+      </div>
+    </Layout>
+  )
+}
 
   return (
     <Layout>
