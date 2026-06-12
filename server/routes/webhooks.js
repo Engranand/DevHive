@@ -8,6 +8,7 @@ router.post('/github', async (req, res) => {
     const event = req.body
 
     console.log('Webhook received:', event.action)
+    console.log('Full event:', JSON.stringify(event).slice(0, 200))
 
     // Sirf PR merge events handle karo
     if (event.action === 'closed' && event.pull_request?.merged === true) {

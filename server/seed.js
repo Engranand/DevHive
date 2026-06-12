@@ -37,7 +37,34 @@ async function seed() {
   console.log('Users ready:', anand.name, rohan.name, sneha.name, kiran.name)
 
   // Find or create project
-  let project = await Project.findOne({ name: 'Project Atlas' })
+ // Find or create project
+let project = await Project.findOne({ name: 'Project Atlas' })
+
+if (project) {
+  // Agar project pehle se hai to members update karo
+  project.members = [
+    { user: anand._id, role: 'owner' },
+    { user: rohan._id, role: 'contributor' },
+    { user: sneha._id, role: 'contributor' },
+    { user: kiran._id, role: 'contributor' },
+  ]
+
+  await project.save()
+}
+
+if (!project) {
+  project = await Project.create({
+    name: 'Project Atlas',
+    description: 'DevHive main project',
+    owner: anand._id,
+    members: [
+      { user: anand._id, role: 'owner' },
+      { user: rohan._id, role: 'contributor' },
+      { user: sneha._id, role: 'contributor' },
+      { user: kiran._id, role: 'contributor' },
+    ],
+  })
+}
   if (!project) {
     project = await Project.create({
       name: 'Project Atlas',

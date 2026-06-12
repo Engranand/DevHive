@@ -163,6 +163,9 @@ export default function Board() {
   const [activeFilter, setActiveFilter] = useState('All')
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
+  const [showModal, setShowModal] = useState(false)
+ const [members, setMembers] = useState([])
+ const [newTask, setNewTask] = useState({ title: '', priority: 'medium', assignee: '', status: 'backlog' })
 
 // Fetch real tasks from backend
 useEffect(() => {
@@ -211,9 +214,25 @@ shortId: task._id.slice(-4),
   fetchTasks()
 }, [])
 
+useEffect(() => {
+  const fetchMembers = async () => {
+    try {
+      const { data } = await api.get(`/projects/${PROJECT_ID}`)
+      setMembers(data.project.members.map(m => ({
+        id: m.user._id,
+        name: m.user.name,
+        initials: m.user.name.slice(0, 2).toUpperCase()
+      })))
+    } catch (err) {
+      console.error('Failed to fetch members:', err)
+    }
+  }
+  fetchMembers()
+}, [])
+
 
   // Socket.io — real-time sync
-  const socketRef = useSocket('project-atlas-001', (data) => {
+ const socketRef = useSocket(PROJECT_ID, (data) => {
     setColumns(prev => {
       const newCols = JSON.parse(JSON.stringify(prev))
       let movedTask = null
@@ -273,7 +292,7 @@ shortId: task._id.slice(-4),
             from: sourceColumnId,
             to: targetColumnId,
             task: movedTask,
-            projectId: 'project-atlas-001'
+            projectId: PROJECT_ID
             
           })
         }
@@ -288,6 +307,45 @@ shortId: task._id.slice(-4),
 
     setDraggingId(null)
   }
+  
+  const handleCreateTask = async () => {
+  if (!newTask.title.trim()) return
+
+  try {
+    const { data } = await api.post('/tasks', {
+      project: PROJECT_ID,
+      title: newTask.title,
+      priority: newTask.priority,
+      status: newTask.status,
+      assignee: newTask.assignee || undefined,
+    })
+
+    const assigneeInitials = data.task.assignee?.name
+      ? data.task.assignee.name.slice(0, 2).toUpperCase()
+      : '??'
+
+    const formattedTask = {
+      id: data.task._id,
+      shortId: data.task._id.slice(-4),
+      title: data.task.title,
+      priority: data.task.priority,
+      assignee: assigneeInitials,
+      tag: 'general',
+    }
+
+    setColumns(prev => {
+      const newCols = JSON.parse(JSON.stringify(prev))
+      newCols[newTask.status].tasks.push(formattedTask)
+      return newCols
+    })
+
+    // Reset form
+    setNewTask({ title: '', priority: 'medium', assignee: '', status: 'backlog' })
+    setShowModal(false)
+  } catch (err) {
+    console.error('Failed to create task:', err)
+  }
+}
 
   const totalTasks = Object.values(columns).reduce((acc, col) => acc + col.tasks.length, 0)
   const doneTasks = columns.done.tasks.length
@@ -303,6 +361,7 @@ if (loading) {
     </Layout>
   )
 }
+  
 
   return (
     <Layout>
@@ -324,9 +383,11 @@ if (loading) {
               <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></span>
               real-time sync
             </div>
-            <button className="bg-accent hover:bg-accent2 text-white text-sm px-4 py-1.5 rounded-lg transition-colors font-medium">
+             <button 
+              onClick={() => setShowModal(true)}
+               className="bg-accent hover:bg-accent2 text-white text-sm px-4 py-1.5 rounded-lg transition-colors font-medium">
               + New Task
-            </button>
+             </button>
           </div>
         </div>
 
@@ -368,6 +429,85 @@ if (loading) {
           ))}
         </div>
       </div>
+      {/* New Task Modal */}
+{showModal && (
+  <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+    <div className="bg-surface border border-border rounded-xl p-5 w-full max-w-md">
+      <h2 className="text-lg font-bold text-text mb-4">Create New Task</h2>
+
+      <div className="space-y-3">
+        <div>
+          <label className="text-xs text-muted font-mono mb-1 block">Title</label>
+          <input
+            value={newTask.title}
+            onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+            placeholder="e.g. Fix login bug"
+            className="w-full bg-bg border border-border rounded-lg px-3 py-2 text-sm text-text placeholder-muted focus:outline-none focus:border-accent"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs text-muted font-mono mb-1 block">Priority</label>
+            <select
+              value={newTask.priority}
+              onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
+              className="w-full bg-bg border border-border rounded-lg px-3 py-2 text-sm text-text focus:outline-none focus:border-accent"
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="critical">Critical</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="text-xs text-muted font-mono mb-1 block">Status</label>
+            <select
+              value={newTask.status}
+              onChange={(e) => setNewTask({ ...newTask, status: e.target.value })}
+              className="w-full bg-bg border border-border rounded-lg px-3 py-2 text-sm text-text focus:outline-none focus:border-accent"
+            >
+              <option value="backlog">Backlog</option>
+              <option value="in_progress">In Progress</option>
+              <option value="in_review">In Review</option>
+              <option value="done">Done</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label className="text-xs text-muted font-mono mb-1 block">Assignee</label>
+          <select
+            value={newTask.assignee}
+            onChange={(e) => setNewTask({ ...newTask, assignee: e.target.value })}
+            className="w-full bg-bg border border-border rounded-lg px-3 py-2 text-sm text-text focus:outline-none focus:border-accent"
+          >
+            <option value="">Unassigned</option>
+            {members.map(m => (
+              <option key={m.id} value={m.id}>{m.name}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="flex gap-2 mt-5">
+        <button
+          onClick={() => setShowModal(false)}
+          className="flex-1 bg-surface2 hover:bg-border text-text2 text-sm px-4 py-2 rounded-lg transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleCreateTask}
+          className="flex-1 bg-accent hover:bg-accent2 text-white text-sm px-4 py-2 rounded-lg transition-colors font-medium"
+        >
+          Create Task
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </Layout>
   )
 }
