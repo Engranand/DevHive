@@ -6,6 +6,7 @@ import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Board from './pages/Board'
 import Sprints from './pages/Sprints'
+import GitHubPage from './pages/GitHub'
 
 function RedirectToLanding() {
   useEffect(() => {
@@ -28,6 +29,7 @@ export default function App() {
       <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
       <Route path="/board" element={<PrivateRoute><Board /></PrivateRoute>} />
       <Route path="/sprints" element={<PrivateRoute><Sprints /></PrivateRoute>} />
+      <Route path="/github" element={<PrivateRoute><GitHubPage /></PrivateRoute>} />
     </Routes>
   )
 }
