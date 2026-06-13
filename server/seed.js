@@ -3,6 +3,7 @@ const dotenv = require('dotenv')
 const User = require('./models/User')
 const Project = require('./models/Project')
 const Task = require('./models/Task')
+const Sprint = require('./models/Sprint')
 
 dotenv.config()
 
@@ -95,8 +96,23 @@ if (!project) {
     { title: 'DB schema v2', priority: 'medium', status: 'done', assignee: kiran._id },
   ]
 
+   // Clear old sprints
+await Sprint.deleteMany({ project: project._id })
+
+// Create active sprint
+const sprint = await Sprint.create({
+  project: project._id,
+  name: 'Sprint 7',
+  goal: 'Ship AI workload engine and real-time sync',
+  startDate: new Date('2026-06-09'),
+  endDate: new Date('2026-06-15'),
+  status: 'active',
+})
+
+console.log('Sprint created:', sprint.name)
+
   for (const t of tasks) {
-    await Task.create({ ...t, project: project._id })
+    await Task.create({ ...t, project: project._id, sprint: sprint._id })
   }
 
   console.log(`${tasks.length} tasks created`)

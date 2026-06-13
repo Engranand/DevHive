@@ -5,6 +5,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Board from './pages/Board'
+import Sprints from './pages/Sprints'
 
 function RedirectToLanding() {
   useEffect(() => {
@@ -26,6 +27,7 @@ export default function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
       <Route path="/board" element={<PrivateRoute><Board /></PrivateRoute>} />
+      <Route path="/sprints" element={<PrivateRoute><Sprints /></PrivateRoute>} />
     </Routes>
   )
 }
