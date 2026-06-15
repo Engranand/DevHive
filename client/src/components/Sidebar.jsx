@@ -1,9 +1,9 @@
+import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { logout } from '../store/authSlice'
 
-
-  const navItems = [
+const navItems = [
   { path: '/dashboard', icon: '⊞', label: 'Dashboard' },
   { path: '/board', icon: '◻', label: 'Kanban Board' },
   { path: '/sprints', icon: '▷', label: 'Sprints' },
@@ -12,15 +12,14 @@ import { logout } from '../store/authSlice'
   { path: '/hive', icon: '⬡', label: 'Hive Board' },
 ]
 
-
 export default function Sidebar() {
   const location = useLocation()
   const dispatch = useDispatch()
   const { user } = useSelector((state) => state.auth)
+  const [mobileOpen, setMobileOpen] = useState(false)
 
-  return (
-    <div className="w-56 min-h-screen bg-surface border-r border-border flex flex-col">
-      
+  const SidebarContent = () => (
+    <div className="w-56 h-full bg-surface border-r border-border flex flex-col">
       {/* Logo */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center gap-2">
@@ -42,6 +41,7 @@ export default function Sidebar() {
           <Link
             key={item.path}
             to={item.path}
+            onClick={() => setMobileOpen(false)}
             className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
               location.pathname === item.path
                 ? 'bg-accent/10 text-accent border border-accent/20'
@@ -74,5 +74,46 @@ export default function Sidebar() {
         </div>
       </div>
     </div>
+  )
+
+  return (
+    <>
+      {/* Desktop Sidebar */}
+      <div className="hidden md:flex min-h-screen">
+        <SidebarContent />
+      </div>
+
+      {/* Mobile Top Bar */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-surface border-b border-border px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 bg-accent flex items-center justify-center text-white font-bold text-xs"
+            style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}>
+            D
+          </div>
+          <span className="font-bold text-text text-sm">DevHive</span>
+        </div>
+        <button
+          onClick={() => setMobileOpen(!mobileOpen)}
+          className="text-muted hover:text-text text-xl transition-colors"
+        >
+          {mobileOpen ? '✕' : '☰'}
+        </button>
+      </div>
+
+      {/* Mobile Sidebar Overlay */}
+      {mobileOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-40 bg-black/60"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Mobile Sidebar Drawer */}
+      <div className={`md:hidden fixed top-0 left-0 h-full z-50 transition-transform duration-300 ${
+        mobileOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+        <SidebarContent />
+      </div>
+    </>
   )
 }

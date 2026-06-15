@@ -109,7 +109,7 @@ export default function Dashboard() {
                 {alerts.length} alerts
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {alerts.map((action, i) => (
                 <div key={i} className={`flex items-center gap-2.5 p-2.5 rounded-lg border text-sm cursor-pointer hover:opacity-80 transition-opacity ${
                   action.type === 'danger' ? 'bg-danger/5 border-danger/20 text-danger' :
@@ -125,7 +125,7 @@ export default function Dashboard() {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
             { label: 'Health Score', value: healthScore, unit: '/100', color: healthScore > 70 ? 'text-success' : healthScore > 50 ? 'text-warning' : 'text-danger' },
             { label: 'Sprint Risk', value: sprintRisk, unit: `${daysLeft}d left`, color: riskColor },
@@ -141,8 +141,8 @@ export default function Dashboard() {
         </div>
 
         {/* Main Grid */}
-        <div className="grid grid-cols-3 gap-4">
-
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          
           {/* AI Workload */}
           <div className="bg-surface border border-accent/20 rounded-xl p-4">
             <div className="flex items-center justify-between mb-4">
