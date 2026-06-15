@@ -6,7 +6,7 @@ import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Board from './pages/Board'
 import Sprints from './pages/Sprints'
-import GitHubPage from './pages/GitHub'
+import GitHubPage from './pages/Github'
 
 function RedirectToLanding() {
   useEffect(() => {
