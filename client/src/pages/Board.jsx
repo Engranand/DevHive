@@ -378,8 +378,8 @@ if (loading) {
               {aiRiskTasks > 0 && <><span className="text-muted">·</span><span className="text-sm text-warning">{aiRiskTasks} workload risk</span></>}
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 text-xs text-success font-mono bg-success/10 border border-success/20 px-3 py-1.5 rounded-lg">
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="hidden sm:flex items-center gap-1.5 text-xs text-success font-mono bg-success/10 border border-success/20 px-3 py-1.5 rounded-lg">
               <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></span>
               real-time sync
             </div>
@@ -422,7 +422,7 @@ if (loading) {
           </span>
         </div>
 
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 overflow-x-auto">
           {Object.values(columns).map((column) => (
             <Column key={column.id} column={column}
               onDragStart={onDragStart} onDragOver={onDragOver} onDrop={onDrop} />
