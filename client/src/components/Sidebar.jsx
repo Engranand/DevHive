@@ -23,10 +23,10 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-accent flex items-center justify-center text-white font-bold text-xs"
-            style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}>
-            D
-          </div>
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+             <path d="M14 2L25 8V20L14 26L3 20V8L14 2Z" fill="#4F8CFF"/>
+             <text x="14" y="19" textAnchor="middle" fill="white" fontSize="13" fontWeight="bold" fontFamily="Arial">D</text>
+             </svg>
           <span className="font-bold text-text">DevHive</span>
           <span className="text-xs text-muted font-mono ml-1">v1.0</span>
         </div>
