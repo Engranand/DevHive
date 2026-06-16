@@ -52,7 +52,6 @@ export default function Sprints() {
   const completionPct = stats.total > 0 ? Math.round((stats.done / stats.total) * 100) : 0
   const daysLeft = Math.max(0, Math.ceil((new Date(sprint.endDate) - new Date()) / (1000 * 60 * 60 * 24)))
 
-  // Burndown chart data
   const totalDays = Math.ceil((new Date(sprint.endDate) - new Date(sprint.startDate)) / (1000 * 60 * 60 * 24))
   const daysPassed = totalDays - daysLeft
   const totalTasks = stats.total
@@ -81,7 +80,7 @@ export default function Sprints() {
           <p className="text-muted text-sm mt-0.5">{sprint.goal}</p>
         </div>
 
-        {/* Sprint Health */}
+        {/* Sprint Health — Bug 1 Fixed: () => {} to (() => {})() */}
         {(() => {
           let risk = 'Low'
           let riskColor = 'text-success'
@@ -115,7 +114,8 @@ export default function Sprints() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-4 gap-3 pt-4 border-t border-border">
+              {/* Bug 2 Fixed: {[ array ].map()} wrapped in curly braces */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-4 border-t border-border">
                 {[
                   { label: 'Backlog', value: stats.backlog, color: 'text-muted' },
                   { label: 'In Progress', value: stats.in_progress, color: 'text-warning' },
@@ -187,38 +187,37 @@ export default function Sprints() {
         })()}
 
         {/* Team Capacity */}
-<div className="bg-surface border border-border rounded-xl p-5">
-  <div className="text-xs text-muted font-mono uppercase tracking-wider mb-4">// Team Capacity</div>
-  <div className="space-y-3">
-    {(workload || []).map(member => {
-      const maxScore = Math.max(...workload.map(w => w.score), 1)
-      const widthPct = Math.round((member.score / maxScore) * 100)
-      const barColor = member.overloaded ? 'bg-danger' : 'bg-accent'
+        <div className="bg-surface border border-border rounded-xl p-5">
+          <div className="text-xs text-muted font-mono uppercase tracking-wider mb-4">// Team Capacity</div>
+          <div className="space-y-3">
+            {(workload || []).map(member => {
+              const maxScore = Math.max(...workload.map(w => w.score), 1)
+              const widthPct = Math.round((member.score / maxScore) * 100)
+              const barColor = member.overloaded ? 'bg-danger' : 'bg-accent'
 
-      return (
-        <div key={member.userId}>
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-sm text-text2">{member.name}</span>
-            <span className={`text-xs font-mono ${member.overloaded ? 'text-danger' : 'text-muted'}`}>
-              {member.openTasks} task{member.openTasks !== 1 ? 's' : ''} · {member.score}pts
-              {member.overloaded && ' ⚠'}
-            </span>
-          </div>
-          <div className="h-1.5 bg-border rounded-full overflow-hidden">
-            <div className={`h-full rounded-full transition-all duration-700 ${barColor}`} style={{ width: `${widthPct}%` }} />
+              return (
+                <div key={member.userId}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-text2">{member.name}</span>
+                    <span className={`text-xs font-mono ${member.overloaded ? 'text-danger' : 'text-muted'}`}>
+                      {member.openTasks} task{member.openTasks !== 1 ? 's' : ''} · {member.score}pts
+                      {member.overloaded && ' ⚠'}
+                    </span>
+                  </div>
+                  <div className="h-1.5 bg-border rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full transition-all duration-700 ${barColor}`} style={{ width: `${widthPct}%` }} />
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
-      )
-    })}
-  </div>
-</div>
 
         {/* Burndown Chart */}
         <div className="bg-surface border border-border rounded-xl p-5">
           <div className="text-xs text-muted font-mono uppercase tracking-wider mb-4">
             // Burndown Chart
           </div>
-
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={burndownData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#21262d" />
@@ -232,7 +231,6 @@ export default function Sprints() {
               <Line type="monotone" dataKey="actual" stroke="#4f8cff" strokeWidth={2} dot={{ fill: '#4f8cff', r: 4 }} name="Actual" connectNulls />
             </LineChart>
           </ResponsiveContainer>
-
           <div className="flex items-center gap-4 mt-2 text-xs text-muted font-mono">
             <div className="flex items-center gap-1.5">
               <span className="w-3 h-0.5 bg-[#4a5568] inline-block"></span>

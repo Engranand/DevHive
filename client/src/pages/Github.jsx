@@ -52,7 +52,7 @@ export default function GitHubPage() {
         </div>
 
         {/* Engineering Stats */}
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
             { label: 'Open PRs', value: pullRequests.filter(pr => pr.state === 'open').length, color: 'text-warning' },
             { label: 'Merged PRs', value: pullRequests.filter(pr => pr.state === 'merged').length, color: 'text-purple' },
@@ -67,7 +67,7 @@ export default function GitHubPage() {
         </div>
 
         {/* Commits + PRs */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Recent Commits */}
           <div className="bg-surface border border-border rounded-xl p-4">
             <div className="flex items-center justify-between mb-3">

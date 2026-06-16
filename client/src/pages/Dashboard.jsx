@@ -94,9 +94,11 @@ export default function Dashboard() {
               <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></span>
               Real-time engine online
             </div>
-            <button className="bg-accent hover:bg-accent2 text-white text-sm px-4 py-1.5 rounded-lg transition-colors font-medium">
-              + New Task
-            </button>
+            <button 
+              onClick={() => window.location.href = '/board'}
+             className="bg-accent hover:bg-accent2 text-white text-sm px-4 py-1.5 rounded-lg transition-colors font-medium">
+            + New Task
+             </button>
           </div>
         </div>
 
