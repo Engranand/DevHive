@@ -3,9 +3,20 @@ const axios = require('axios')
 const GITHUB_API = 'https://api.github.com'
 const REPO = 'Engranand/DevHive'
 
-// Repo stats — stars, forks, language, etc
+// GitHub token (optional)
+const headers = process.env.GITHUB_TOKEN
+  ? {
+      Authorization: `token ${process.env.GITHUB_TOKEN}`
+    }
+  : {}
+
+// Repo stats
 const getRepoStats = async () => {
-  const { data } = await axios.get(`${GITHUB_API}/repos/${REPO}`)
+  const { data } = await axios.get(
+    `${GITHUB_API}/repos/${REPO}`,
+    { headers }
+  )
+
   return {
     name: data.name,
     description: data.description,
@@ -20,9 +31,14 @@ const getRepoStats = async () => {
 
 // Recent commits
 const getRecentCommits = async (limit = 5) => {
-  const { data } = await axios.get(`${GITHUB_API}/repos/${REPO}/commits`, {
-    params: { per_page: limit }
-  })
+  const { data } = await axios.get(
+    `${GITHUB_API}/repos/${REPO}/commits`,
+    {
+      params: { per_page: limit },
+      headers
+    }
+  )
+
   return data.map(commit => ({
     sha: commit.sha.slice(0, 7),
     message: commit.commit.message.split('\n')[0],
@@ -34,9 +50,19 @@ const getRecentCommits = async (limit = 5) => {
 
 // Recent pull requests
 const getRecentPRs = async (limit = 5) => {
-  const { data } = await axios.get(`${GITHUB_API}/repos/${REPO}/pulls`, {
-    params: { state: 'all', per_page: limit, sort: 'updated', direction: 'desc' }
-  })
+  const { data } = await axios.get(
+    `${GITHUB_API}/repos/${REPO}/pulls`,
+    {
+      params: {
+        state: 'all',
+        per_page: limit,
+        sort: 'updated',
+        direction: 'desc'
+      },
+      headers
+    }
+  )
+
   return data.map(pr => ({
     number: pr.number,
     title: pr.title,
@@ -47,4 +73,8 @@ const getRecentPRs = async (limit = 5) => {
   }))
 }
 
-module.exports = { getRepoStats, getRecentCommits, getRecentPRs }
+module.exports = {
+  getRepoStats,
+  getRecentCommits,
+  getRecentPRs
+}
