@@ -15,7 +15,36 @@ const statusConfig = {
   done: { label: 'Done', color: 'text-success' },
 }
 
-export default function TaskDrawer({ taskId, onClose }) {
+const tagColors = {
+  backend: 'bg-accent/10 text-accent',
+  security: 'bg-warning/10 text-warning',
+  testing: 'bg-muted/10 text-muted',
+  ai: 'bg-purple/10 text-purple',
+  ui: 'bg-success/10 text-success',
+  auth: 'bg-danger/10 text-danger',
+  realtime: 'bg-accent/10 text-accent',
+  database: 'bg-warning/10 text-warning',
+  general: 'bg-muted/10 text-muted',
+}
+
+// Smarter AI insight — 3 states
+function getAIInsight(task, daysLeft) {
+  if (task.status === 'done') {
+    return { icon: '✅', color: 'text-success', label: 'Completed', msg: 'Task is done. No action needed.' }
+  }
+  if (task.priority === 'critical' && daysLeft <= 2) {
+    return { icon: '🔴', color: 'text-danger', label: 'Sprint Risk Contributor', msg: 'Critical task with sprint ending soon. Requires immediate attention.' }
+  }
+  if (task.status === 'in_review' && daysLeft <= 3) {
+    return { icon: '🟡', color: 'text-warning', label: 'Review Delay Detected', msg: 'Task stuck in review. May impact sprint goals if not merged soon.' }
+  }
+  if (task.priority === 'high' && task.status === 'backlog') {
+    return { icon: '🟡', color: 'text-warning', label: 'Not Started', msg: 'High priority task still in backlog. Consider moving to In Progress.' }
+  }
+  return { icon: '🟢', color: 'text-success', label: 'On Track', msg: 'Task is progressing normally. No action needed.' }
+}
+
+export default function TaskDrawer({ taskId, onClose, sprintDaysLeft = 0 }) {
   const [task, setTask] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -23,7 +52,6 @@ export default function TaskDrawer({ taskId, onClose }) {
     if (!taskId) return
     const fetchTask = async () => {
       try {
-        console.log('Fetching task ID:', taskId)
         setLoading(true)
         const { data } = await api.get(`/tasks/${taskId}`)
         setTask(data.task)
@@ -38,16 +66,15 @@ export default function TaskDrawer({ taskId, onClose }) {
 
   if (!taskId) return null
 
+  const insight = task ? getAIInsight(task, sprintDaysLeft) : null
+
   return (
     <>
       {/* Overlay */}
-      <div
-        className="fixed inset-0 bg-black/50 z-40"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
 
-      {/* Drawer */}
-      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-surface border-l border-border z-50 flex flex-col shadow-2xl">
+      {/* Drawer — max-w-sm for better proportions */}
+      <div className="fixed right-0 top-0 h-full w-full max-w-sm bg-surface border-l border-border z-50 flex flex-col shadow-2xl">
 
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
@@ -66,54 +93,71 @@ export default function TaskDrawer({ taskId, onClose }) {
         ) : (
           <div className="flex-1 overflow-y-auto p-5 space-y-5">
 
-            {/* Title */}
+            {/* Title + Tag */}
             <div>
-              <div className="text-xs text-muted font-mono mb-1">Title</div>
-              <div className="text-lg font-bold text-text">{task.title}</div>
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                {task.priority && (
+                  <span className={`text-xs px-2 py-0.5 rounded border font-mono ${priorityConfig[task.priority]?.color}`}>
+                    {priorityConfig[task.priority]?.label}
+                  </span>
+                )}
+                {task.tags?.map(tag => (
+                  <span key={tag} className={`text-xs px-2 py-0.5 rounded font-mono ${tagColors[tag] || tagColors.general}`}>
+                    {tag}
+                  </span>
+                ))}
+              </div>
+              <div className="text-lg font-bold text-text leading-snug">{task.title}</div>
             </div>
 
-            {/* Status + Priority */}
+            {/* Status + Assignee */}
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <div className="text-xs text-muted font-mono mb-2">Status</div>
+              <div className="bg-bg border border-border rounded-lg p-3">
+                <div className="text-xs text-muted font-mono mb-1">Status</div>
                 <span className={`text-sm font-medium ${statusConfig[task.status]?.color || 'text-muted'}`}>
                   {statusConfig[task.status]?.label || task.status}
                 </span>
               </div>
-              <div>
-                <div className="text-xs text-muted font-mono mb-2">Priority</div>
-                <span className={`text-xs px-2 py-1 rounded border font-mono ${priorityConfig[task.priority]?.color || ''}`}>
-                  {priorityConfig[task.priority]?.label || task.priority}
-                </span>
+              <div className="bg-bg border border-border rounded-lg p-3">
+                <div className="text-xs text-muted font-mono mb-1">Assignee</div>
+                {task.assignee ? (
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-5 h-5 rounded bg-accent/20 text-accent text-xs font-bold flex items-center justify-center">
+                      {task.assignee.name?.slice(0, 2).toUpperCase()}
+                    </div>
+                    <span className="text-sm text-text truncate">{task.assignee.name}</span>
+                  </div>
+                ) : (
+                  <span className="text-sm text-muted">Unassigned</span>
+                )}
               </div>
             </div>
 
-            {/* Assignee */}
-            <div>
-              <div className="text-xs text-muted font-mono mb-2">Assignee</div>
-              {task.assignee ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-accent/20 text-accent text-xs font-bold flex items-center justify-center">
-                    {task.assignee.name?.slice(0, 2).toUpperCase()}
-                  </div>
-                  <span className="text-sm text-text">{task.assignee.name}</span>
+            {/* Sprint Info */}
+            {sprintDaysLeft !== undefined && (
+              <div className="bg-bg border border-border rounded-lg p-3">
+                <div className="text-xs text-muted font-mono mb-1">Sprint</div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-text">Sprint 7</span>
+                  <span className={`text-xs font-mono ${sprintDaysLeft <= 2 ? 'text-danger' : 'text-warning'}`}>
+                    {sprintDaysLeft}d left
+                  </span>
                 </div>
-              ) : (
-                <span className="text-sm text-muted">Unassigned</span>
-              )}
-            </div>
+              </div>
+            )}
 
-            {/* GitHub PR Link */}
+            {/* GitHub PR */}
             {task.githubPRUrl && (
-              <div>
-                <div className="text-xs text-muted font-mono mb-2">GitHub PR</div>
-                <a
-                  href={task.githubPRUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-accent hover:underline"
-                >
-                  🔗 {task.githubPRUrl.split('/').slice(-2).join('#')}
+              <div className="bg-bg border border-border rounded-lg p-3">
+                <div className="text-xs text-muted font-mono mb-1">GitHub PR</div>
+                <a href={task.githubPRUrl} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-sm text-accent hover:underline">
+                  🔗 PR #{task.githubPRUrl.split('/').pop()}
+                  <span className={`text-xs px-1.5 py-0.5 rounded font-mono ml-auto ${
+                    task.status === 'done' ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'
+                  }`}>
+                    {task.status === 'done' ? 'merged' : 'open'}
+                  </span>
                 </a>
               </div>
             )}
@@ -121,24 +165,26 @@ export default function TaskDrawer({ taskId, onClose }) {
             {/* Description */}
             <div>
               <div className="text-xs text-muted font-mono mb-2">Description</div>
-              <div className="bg-bg border border-border rounded-lg p-3 text-sm text-text2 min-h-20">
-                {task.description || (
-                  <span className="text-muted italic">No description added.</span>
-                )}
+              <div className="bg-bg border border-border rounded-lg p-3 text-sm text-text2 min-h-16">
+                {task.description || <span className="text-muted italic">No description added.</span>}
               </div>
             </div>
 
-            {/* AI Suggestion */}
-            {task.status !== 'done' && (
-              <div className="bg-purple/5 border border-purple/20 rounded-xl p-4">
-                <div className="text-xs text-purple font-mono uppercase tracking-wider mb-2">// AI Suggestion</div>
-                <div className="text-sm text-text2">
-                  {task.priority === 'critical'
-                    ? '⚠ This task is critical — prioritize before sprint end.'
-                    : task.priority === 'high'
-                    ? '→ High priority task — ensure it moves to Review today.'
-                    : '✓ Task is on track. No action needed.'}
+            {/* AI Insight — Smarter */}
+            {insight && (
+              <div className={`border rounded-xl p-4 ${
+                insight.label === 'Sprint Risk Contributor' ? 'bg-danger/5 border-danger/20' :
+                insight.label === 'Review Delay Detected' || insight.label === 'Not Started' ? 'bg-warning/5 border-warning/20' :
+                insight.label === 'Completed' ? 'bg-success/5 border-success/20' :
+                'bg-purple/5 border-purple/20'
+              }`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <span>{insight.icon}</span>
+                  <div className={`text-xs font-mono uppercase tracking-wider ${insight.color}`}>
+                    {insight.label}
+                  </div>
                 </div>
+                <div className="text-sm text-text2">{insight.msg}</div>
               </div>
             )}
 

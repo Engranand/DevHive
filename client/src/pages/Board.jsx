@@ -356,9 +356,10 @@ export default function Board() {
 
         {/* Task Drawer */}
         <TaskDrawer
-          taskId={selectedTaskId}
-          onClose={() => setSelectedTaskId(null)}
-        />
+       taskId={selectedTaskId}
+     onClose={() => setSelectedTaskId(null)}
+        sprintDaysLeft={2}
+/>
 
       </div>
     </Layout>
