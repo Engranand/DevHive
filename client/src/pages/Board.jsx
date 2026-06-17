@@ -1,7 +1,8 @@
-import { useSocket } from '../hooks/useSocket'
+ import { useSocket } from '../hooks/useSocket'
 import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
 import api from '../services/api'
+import TaskDrawer from '../components/TaskDrawer'
 
 const PROJECT_ID = '6a2c7ce76ec1258f7b8e9357'
 
@@ -41,7 +42,7 @@ const avatarColors = {
 
 const filters = ['All', 'My Tasks', 'High Priority', 'Blocked', 'AI Risk']
 
-function TaskCard({ task, onDragStart }) {
+function TaskCard({ task, onDragStart, onTaskClick }) {
   const priority = priorityConfig[task.priority] || priorityConfig.medium
   const wl = workloadInfo[task.assignee] || { score: 0, risk: false }
 
@@ -49,6 +50,7 @@ function TaskCard({ task, onDragStart }) {
     <div
       draggable
       onDragStart={(e) => onDragStart(e, task.id)}
+      onClick={() => onTaskClick(task.id)}
       className={`bg-bg border rounded-lg p-3 cursor-grab active:cursor-grabbing transition-all ${
         task.blocked ? 'border-danger/30 bg-danger/3'
         : wl.risk ? 'border-warning/20 hover:border-warning/40'
@@ -94,7 +96,7 @@ function TaskCard({ task, onDragStart }) {
   )
 }
 
-function Column({ column, onDragStart, onDragOver, onDrop }) {
+function Column({ column, onDragStart, onDragOver, onDrop, onTaskClick }) {
   return (
     <div className="flex flex-col min-w-0" onDragOver={onDragOver} onDrop={(e) => onDrop(e, column.id)}>
       <div className="flex items-center justify-between mb-3 px-1">
@@ -110,7 +112,7 @@ function Column({ column, onDragStart, onDragOver, onDrop }) {
       </div>
       <div className="flex flex-col gap-2 min-h-32">
         {column.tasks.map((task) => (
-          <TaskCard key={task.id} task={task} onDragStart={onDragStart} />
+          <TaskCard key={task.id} task={task} onDragStart={onDragStart} onTaskClick={onTaskClick} />
         ))}
         {column.tasks.length === 0 && (
           <div className="border border-dashed border-border rounded-lg p-6 text-center text-xs text-muted font-mono flex-1">
@@ -131,6 +133,7 @@ export default function Board() {
   const [showModal, setShowModal] = useState(false)
   const [members, setMembers] = useState([])
   const [newTask, setNewTask] = useState({ title: '', priority: 'medium', assignee: '', status: 'backlog' })
+  const [selectedTaskId, setSelectedTaskId] = useState(null)
 
   const socketRef = useSocket(PROJECT_ID, (data) => {
     setColumns(prev => {
@@ -289,7 +292,14 @@ export default function Board() {
         {/* Kanban Columns */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {Object.values(columns).map((column) => (
-            <Column key={column.id} column={column} onDragStart={onDragStart} onDragOver={onDragOver} onDrop={onDrop} />
+            <Column
+              key={column.id}
+              column={column}
+              onDragStart={onDragStart}
+              onDragOver={onDragOver}
+              onDrop={onDrop}
+              onTaskClick={setSelectedTaskId}
+            />
           ))}
         </div>
 
@@ -343,6 +353,13 @@ export default function Board() {
             </div>
           </div>
         )}
+
+        {/* Task Drawer */}
+        <TaskDrawer
+          taskId={selectedTaskId}
+          onClose={() => setSelectedTaskId(null)}
+        />
+
       </div>
     </Layout>
   )

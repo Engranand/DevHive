@@ -26,6 +26,19 @@ router.post('/', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+
+
+// GET /api/tasks/:id
+router.get('/:id', async (req, res, next) => {
+  try {
+    const task = await Task.findById(req.params.id)
+      .populate('assignee', 'name avatar')
+      .populate('project', 'name')
+    if (!task) return res.status(404).json({ message: 'Task not found' })
+    res.json({ task })
+  } catch (err) { next(err) }
+}) 
+
 // PATCH /api/tasks/:id
 router.patch('/:id', async (req, res, next) => {
   try {
