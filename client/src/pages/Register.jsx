@@ -10,10 +10,10 @@ export default function Register() {
   const [form, setForm] = useState({ name: '', email: '', password: '' })
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    const result = await dispatch(register(form))
-    if (result.meta.requestStatus === 'fulfilled') navigate('/')
-  }
+  e.preventDefault()
+  const result = await dispatch(register(form))
+  if (result.meta.requestStatus === 'fulfilled') navigate('/create-project')
+}
 
   return (
     <div className="min-h-screen bg-bg flex items-center justify-center px-4">

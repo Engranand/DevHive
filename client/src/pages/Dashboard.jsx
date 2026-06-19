@@ -3,10 +3,11 @@ import { useSelector } from 'react-redux'
 import Layout from '../components/Layout'
 import api from '../services/api'
 
-const PROJECT_ID = '6a2c7ce76ec1258f7b8e9357'
+
 
 export default function Dashboard() {
-  const { user } = useSelector((state) => state.auth)
+  const { user, activeProject } = useSelector((state) => state.auth)
+  const PROJECT_ID = activeProject?._id
   const [sprint, setSprint] = useState(null)
   const [stats, setStats] = useState(null)
   const [workload, setWorkload] = useState([])

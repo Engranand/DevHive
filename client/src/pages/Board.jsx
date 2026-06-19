@@ -3,8 +3,9 @@ import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
 import api from '../services/api'
 import TaskDrawer from '../components/TaskDrawer'
+import { useSelector } from 'react-redux'
 
-const PROJECT_ID = '6a2c7ce76ec1258f7b8e9357'
+
 
 const initialColumns = {
   backlog: { id: 'backlog', title: 'Backlog', color: 'text-muted', tasks: [] },
@@ -125,6 +126,8 @@ function Column({ column, onDragStart, onDragOver, onDrop, onTaskClick }) {
 }
 
 export default function Board() {
+  const { activeProject } = useSelector((state) => state.auth)
+  const PROJECT_ID = activeProject?._id
   const [columns, setColumns] = useState(initialColumns)
   const [draggingId, setDraggingId] = useState(null)
   const [activeFilter, setActiveFilter] = useState('All')
