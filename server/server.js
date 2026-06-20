@@ -39,6 +39,7 @@ app.use('/api/tasks', require('./routes/tasks'));
 app.use('/api/webhooks', require('./routes/webhooks'));
 app.use('/api/sprints', require('./routes/sprints'));
 app.use('/api/github', require('./routes/github'));
+app.use('/api/invitations', require('./routes/invitations'));
 
 // Health check
 app.get('/api/health', (req, res) => {

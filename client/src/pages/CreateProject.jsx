@@ -45,20 +45,31 @@ export default function CreateProject() {
     }
   }
 
-  const handleAddInvite = () => {
-    if (!inviteEmail.trim()) return
-    if (!inviteEmail.includes('@')) {
-      setInviteError('Enter a valid email')
-      return
-    }
-    if (invites.includes(inviteEmail)) {
-      setInviteError('Already added')
-      return
-    }
+ const handleAddInvite = async () => {
+  if (!inviteEmail.trim()) return
+  if (!inviteEmail.includes('@')) {
+    setInviteError('Enter a valid email')
+    return
+  }
+  if (invites.includes(inviteEmail)) {
+    setInviteError('Already added')
+    return
+  }
+
+  try {
+    // Actual backend call — invitation record banegi
+    await api.post('/invitations', {
+      projectId: project._id,
+      email: inviteEmail,
+      role: 'contributor',
+    })
     setInvites([...invites, inviteEmail])
     setInviteEmail('')
     setInviteError('')
+  } catch (err) {
+    setInviteError(err.response?.data?.message || 'Failed to send invite')
   }
+}
 
  const handleFinish = async () => {
   navigate('/dashboard')

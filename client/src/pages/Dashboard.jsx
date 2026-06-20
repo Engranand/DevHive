@@ -3,8 +3,6 @@ import { useSelector } from 'react-redux'
 import Layout from '../components/Layout'
 import api from '../services/api'
 
-
-
 export default function Dashboard() {
   const { user, activeProject } = useSelector((state) => state.auth)
   const PROJECT_ID = activeProject?._id
@@ -12,18 +10,21 @@ export default function Dashboard() {
   const [stats, setStats] = useState(null)
   const [workload, setWorkload] = useState([])
   const [loading, setLoading] = useState(true)
+  const [pendingInvites, setPendingInvites] = useState([])
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [sprintRes, workloadRes] = await Promise.all([
+        const [sprintRes, workloadRes, invitesRes] = await Promise.all([
           api.get(`/sprints?projectId=${PROJECT_ID}`),
           api.get(`/projects/${PROJECT_ID}/workload`),
+          api.get('/invitations/pending'),
         ])
 
         const activeSprint = sprintRes.data.sprints.find(s => s.status === 'active') || sprintRes.data.sprints[0]
         setSprint(activeSprint)
         setWorkload(workloadRes.data.workload)
+        setPendingInvites(invitesRes.data.invitations)
 
         if (activeSprint) {
           const statsRes = await api.get(`/sprints/${activeSprint._id}/stats`)
@@ -37,6 +38,25 @@ export default function Dashboard() {
     }
     fetchData()
   }, [])
+
+  const handleAcceptInvite = async (inviteId) => {
+    try {
+      await api.post(`/invitations/${inviteId}/accept`)
+      setPendingInvites(prev => prev.filter(inv => inv._id !== inviteId))
+      window.location.reload()
+    } catch (err) {
+      console.error('Failed to accept invite:', err)
+    }
+  }
+
+  const handleDeclineInvite = async (inviteId) => {
+    try {
+      await api.post(`/invitations/${inviteId}/decline`)
+      setPendingInvites(prev => prev.filter(inv => inv._id !== inviteId))
+    } catch (err) {
+      console.error('Failed to decline invite:', err)
+    }
+  }
 
   // Computed values
   const daysLeft = sprint ? Math.max(0, Math.ceil((new Date(sprint.endDate) - new Date()) / (1000 * 60 * 60 * 24))) : 0
@@ -79,6 +99,39 @@ export default function Dashboard() {
     <Layout>
       <div className="p-6 space-y-5">
 
+        {/* Pending Invites Banner */}
+        {pendingInvites.length > 0 && (
+          <div className="bg-purple/5 border border-purple/20 rounded-xl p-4">
+            <div className="text-xs text-purple font-mono uppercase tracking-wider mb-3">
+              // {pendingInvites.length} Pending Invitation{pendingInvites.length > 1 ? 's' : ''}
+            </div>
+            <div className="space-y-2">
+              {pendingInvites.map((invite) => (
+                <div key={invite._id} className="flex items-center justify-between bg-bg border border-border rounded-lg p-3">
+                  <div>
+                    <div className="text-sm text-text font-medium">{invite.project?.name}</div>
+                    <div className="text-xs text-muted">Invited by {invite.invitedBy?.name}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleDeclineInvite(invite._id)}
+                      className="text-xs bg-surface2 hover:bg-border text-text2 px-3 py-1.5 rounded-lg transition-colors"
+                    >
+                      Decline
+                    </button>
+                    <button
+                      onClick={() => handleAcceptInvite(invite._id)}
+                      className="text-xs bg-accent hover:bg-accent2 text-white px-3 py-1.5 rounded-lg transition-colors font-medium"
+                    >
+                      Accept
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -87,7 +140,7 @@ export default function Dashboard() {
             </div>
             <h1 className="text-xl font-bold text-text">Workspace Overview</h1>
             <p className="text-muted text-sm mt-0.5">
-              Project Atlas · {sprint?.name || 'No sprint'} · {workload.length} members
+              {activeProject?.name || 'Project'} · {sprint?.name || 'No sprint'} · {workload.length} members
             </p>
           </div>
           <div className="flex items-center gap-2">
