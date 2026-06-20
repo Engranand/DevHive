@@ -1,4 +1,4 @@
- import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import api from '../services/api'
 
 export const login = createAsyncThunk('auth/login', async (credentials, { rejectWithValue }) => {
@@ -25,6 +25,16 @@ export const register = createAsyncThunk('auth/register', async (userData, { rej
   }
 })
 
+export const checkAuth = createAsyncThunk('auth/checkAuth', async (_, { rejectWithValue }) => {
+  try {
+    const { data } = await api.get('/auth/me')
+    return data
+  } catch (err) {
+    localStorage.removeItem('token')
+    return rejectWithValue('Session expired')
+  }
+})
+
 const authSlice = createSlice({
   name: 'auth',
   initialState: {
@@ -33,10 +43,11 @@ const authSlice = createSlice({
     loading: false,
     error: null,
     projects: [],
-    activeProject: localStorage.getItem('activeProjectId') 
-      ? { _id: localStorage.getItem('activeProjectId') } 
+    activeProject: localStorage.getItem('activeProjectId')
+      ? { _id: localStorage.getItem('activeProjectId') }
       : null,
     hasProject: false,
+    authChecked: false, // ← naya field
   },
   reducers: {
     logout(state) {
@@ -45,6 +56,7 @@ const authSlice = createSlice({
       state.projects = []
       state.activeProject = null
       state.hasProject = false
+      state.authChecked = false
       localStorage.removeItem('token')
       localStorage.removeItem('activeProjectId')
     },
@@ -53,16 +65,17 @@ const authSlice = createSlice({
     },
     // Active project switch karo
     setActiveProject(state, { payload }) {
-  state.activeProject = payload
-  state.hasProject = true  // ← yeh add karo
-  localStorage.setItem('activeProjectId', payload._id)
-},
+      state.activeProject = payload
+      state.hasProject = true
+      localStorage.setItem('activeProjectId', payload._id)
+    },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(login.pending, (state) => { 
+      // ── Login ──────────────────────────────────────────
+      .addCase(login.pending, (state) => {
         state.loading = true
-        state.error = null 
+        state.error = null
       })
       .addCase(login.fulfilled, (state, { payload }) => {
         state.loading = false
@@ -70,6 +83,7 @@ const authSlice = createSlice({
         state.token = payload.token
         state.projects = payload.projects || []
         state.hasProject = payload.hasProject || false
+        state.authChecked = true
         // Pehla project active set karo
         if (payload.projects?.length > 0) {
           state.activeProject = payload.projects[0]
@@ -79,9 +93,11 @@ const authSlice = createSlice({
         state.loading = false
         state.error = payload
       })
-      .addCase(register.pending, (state) => { 
+
+      // ── Register ───────────────────────────────────────
+      .addCase(register.pending, (state) => {
         state.loading = true
-        state.error = null 
+        state.error = null
       })
       .addCase(register.fulfilled, (state, { payload }) => {
         state.loading = false
@@ -90,10 +106,34 @@ const authSlice = createSlice({
         state.projects = []
         state.hasProject = false  // Naya user — project banana hai
         state.activeProject = null
+        state.authChecked = true
       })
       .addCase(register.rejected, (state, { payload }) => {
         state.loading = false
         state.error = payload
+      })
+
+      // ── CheckAuth ──────────────────────────────────────
+      .addCase(checkAuth.pending, (state) => {
+        state.loading = true
+      })
+      .addCase(checkAuth.fulfilled, (state, { payload }) => {
+        state.loading = false
+        state.authChecked = true
+        state.user = payload.user
+        state.projects = payload.projects || []
+        state.hasProject = payload.hasProject || false
+        if (payload.projects?.length > 0) {
+          const savedId = localStorage.getItem('activeProjectId')
+          const found = payload.projects.find(p => p._id === savedId)
+          state.activeProject = found || payload.projects[0]
+        }
+      })
+      .addCase(checkAuth.rejected, (state) => {
+        state.loading = false
+        state.authChecked = true
+        state.user = null
+        state.token = null
       })
   },
 })
