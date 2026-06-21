@@ -3,6 +3,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Project = require('../models/Project');
+const crypto = require('crypto')
 
 const generateToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
@@ -63,5 +64,53 @@ router.get('/me', async (req, res, next) => {
     res.json({ user, projects, hasProject: projects.length > 0 });
   } catch (err) { next(err); }
 });
+
+   // POST /api/auth/forgot-password
+router.post('/forgot-password', async (req, res, next) => {
+  try {
+    const { email } = req.body
+    const user = await User.findOne({ email: email.toLowerCase() })
+    
+    // Security — user na mile toh bhi same message (email enumeration se bachne ke liye)
+    if (!user) {
+      return res.json({ message: 'If that email exists, a reset link has been sent.' })
+    }
+
+    // Random token banao
+    const resetToken = crypto.randomBytes(32).toString('hex')
+    user.resetToken = resetToken
+    user.resetTokenExpiry = Date.now() + 60 * 60 * 1000 // 1 hour
+    await user.save()
+
+    // MVP — token directly response mein (production mein email jaayega)
+    res.json({ 
+      message: 'If that email exists, a reset link has been sent.',
+      devToken: resetToken // ⚠️ sirf development ke liye, baad mein hatana hai
+    })
+  } catch (err) { next(err) }
+})
+
+// POST /api/auth/reset-password
+router.post('/reset-password', async (req, res, next) => {
+  try {
+    const { token, newPassword } = req.body
+    
+    const user = await User.findOne({
+      resetToken: token,
+      resetTokenExpiry: { $gt: Date.now() } // expire nahi hua ho
+    })
+
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired reset token' })
+    }
+
+    user.password = newPassword // pre-save hook automatically hash karega
+    user.resetToken = null
+    user.resetTokenExpiry = null
+    await user.save()
+
+    res.json({ message: 'Password reset successful. Please login.' })
+  } catch (err) { next(err) }
+})
 
 module.exports = router;

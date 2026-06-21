@@ -73,7 +73,7 @@ export default function Login() {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs text-muted font-mono uppercase tracking-wider">Password</label>
-                <span className="text-xs text-accent hover:underline cursor-pointer">Forgot password?</span>
+                <Link to="/forgot-password" className="text-xs text-accent hover:underline">Forgot password?</Link>
               </div>
               <input type="password" placeholder="••••••••" required value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}

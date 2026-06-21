@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { logout } from '../store/authSlice'
+import { logout, setActiveProject } from '../store/authSlice'
 
 const navItems = [
   { path: '/dashboard', icon: '⊞', label: 'Dashboard' },
@@ -15,8 +15,15 @@ const navItems = [
 export default function Sidebar() {
   const location = useLocation()
   const dispatch = useDispatch()
-  const { user } = useSelector((state) => state.auth)
+  const { user, projects, activeProject } = useSelector((state) => state.auth)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [projectMenuOpen, setProjectMenuOpen] = useState(false)
+
+  const handleSwitchProject = (project) => {
+    dispatch(setActiveProject(project))
+    setProjectMenuOpen(false)
+    window.location.href = '/dashboard'
+  }
 
   const SidebarContent = () => (
     <div className="w-56 h-full bg-surface border-r border-border flex flex-col">
@@ -30,6 +37,58 @@ export default function Sidebar() {
           <span className="font-bold text-text">DevHive</span>
           <span className="text-xs text-muted font-mono ml-1">v1.0</span>
         </div>
+      </div>
+
+      {/* Project Switcher */}
+      <div className="p-3 border-b border-border relative">
+        <button
+          onClick={() => setProjectMenuOpen(!projectMenuOpen)}
+          className="w-full flex items-center justify-between gap-2 px-3 py-2 bg-bg border border-border rounded-lg hover:border-accent/30 transition-colors"
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-5 h-5 rounded bg-accent/20 text-accent text-xs font-bold flex items-center justify-center flex-shrink-0">
+              {activeProject?.name?.charAt(0).toUpperCase() || 'P'}
+            </div>
+            <span className="text-xs text-text truncate">{activeProject?.name || 'Select Project'}</span>
+          </div>
+          <span className="text-muted text-xs flex-shrink-0">{projectMenuOpen ? '▲' : '▼'}</span>
+        </button>
+
+        {/* Dropdown */}
+        {projectMenuOpen && (
+          <>
+            <div className="fixed inset-0 z-30" onClick={() => setProjectMenuOpen(false)} />
+            <div className="absolute left-3 right-3 top-full mt-1 z-40 bg-surface2 border border-border rounded-lg shadow-xl overflow-hidden">
+              <div className="text-xs text-muted font-mono uppercase tracking-wider px-3 py-2 border-b border-border">
+                Your Projects
+              </div>
+              {projects.map((project) => (
+                <button
+                  key={project._id}
+                  onClick={() => handleSwitchProject(project)}
+                  className={`w-full flex items-center gap-2 px-3 py-2 text-left text-xs transition-colors ${
+                    activeProject?._id === project._id
+                      ? 'bg-accent/10 text-accent'
+                      : 'text-text2 hover:bg-surface hover:text-text'
+                  }`}
+                >
+                  <div className="w-5 h-5 rounded bg-accent/20 text-accent text-xs font-bold flex items-center justify-center flex-shrink-0">
+                    {project.name?.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="truncate flex-1">{project.name}</span>
+                  {activeProject?._id === project._id && <span className="text-accent">✓</span>}
+                </button>
+              ))}
+              <Link
+                to="/create-project"
+                onClick={() => setProjectMenuOpen(false)}
+                className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs text-accent hover:bg-surface transition-colors border-t border-border"
+              >
+                <span>+</span> New Project
+              </Link>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Nav Items */}

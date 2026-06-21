@@ -10,7 +10,8 @@ import Sprints from './pages/Sprints'
 import GitHubPage from './pages/Github'
 import Team from './pages/Team'
 import CreateProject from './pages/CreateProject'
-
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 function RedirectToLanding() {
   useEffect(() => {
     window.location.replace('/landing.html')
@@ -60,6 +61,8 @@ export default function App() {
       <Route path="/sprints" element={<ProjectRoute><Sprints /></ProjectRoute>} />
       <Route path="/github" element={<ProjectRoute><GitHubPage /></ProjectRoute>} />
       <Route path="/team" element={<ProjectRoute><Team /></ProjectRoute>} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
     </Routes>
   )
 }

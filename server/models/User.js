@@ -7,13 +7,15 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true, minlength: 6 },
   avatar:   { type: String, default: '' },
   githubId: { type: String, default: '' },
+  resetToken: { type: String, default: null },
+resetTokenExpiry: { type: Date, default: null },
 }, { timestamps: true });
 
 userSchema.pre('save', async function() {
   if (!this.isModified('password')) return;
   this.password = await bcrypt.hash(this.password, 12);
 });
-
+  
 
 userSchema.methods.matchPassword = function(entered) {
   return bcrypt.compare(entered, this.password);
