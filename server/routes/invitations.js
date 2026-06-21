@@ -4,6 +4,7 @@ const { protect } = require('../middleware/auth')
 const Invitation = require('../models/Invitation')
 const Project = require('../models/Project')
 const User = require('../models/User')
+const { sendInviteEmail } = require('../services/emailService')
 
 router.use(protect)
 
@@ -12,14 +13,12 @@ router.post('/', async (req, res, next) => {
   try {
     const { projectId, email, role } = req.body
 
-    // Check — already member hai kya?
     const project = await Project.findById(projectId).populate('members.user', 'email')
     const alreadyMember = project.members.some(m => m.user.email === email.toLowerCase())
     if (alreadyMember) {
       return res.status(400).json({ message: 'Already a member of this project' })
     }
 
-    // Check — already pending invite hai kya?
     const existing = await Invitation.findOne({ 
       project: projectId, 
       email: email.toLowerCase(), 
@@ -35,6 +34,10 @@ router.post('/', async (req, res, next) => {
       invitedBy: req.user._id,
       role: role || 'contributor',
     })
+
+    // Email bhejo — existing user hai ya naya, check karo
+    const existingUser = await User.findOne({ email: email.toLowerCase() })
+    await sendInviteEmail(email, req.user.name, project.name, !!existingUser)
 
     res.status(201).json({ invitation })
   } catch (err) { next(err) }
