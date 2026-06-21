@@ -5,6 +5,7 @@ const User = require('../models/User');
 const Project = require('../models/Project');
 const crypto = require('crypto')
 const { authLimiter } = require('../middleware/rateLimiter')
+const { sendPasswordResetEmail } = require('../services/emailService')
 
 const generateToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
@@ -78,9 +79,12 @@ router.post('/forgot-password', authLimiter, async (req, res, next) => {
     user.resetTokenExpiry = Date.now() + 60 * 60 * 1000
     await user.save()
 
+    // Real email bhejo
+    await sendPasswordResetEmail(user.email, resetToken, user.name)
+
     res.json({ 
-      message: 'If that email exists, a reset link has been sent.',
-      devToken: resetToken
+      message: 'If that email exists, a reset link has been sent.'
+      // devToken hata diya — ab real email jaayega
     })
   } catch (err) { next(err) }
 })
