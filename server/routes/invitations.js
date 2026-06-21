@@ -95,4 +95,15 @@ router.post('/:id/decline', async (req, res, next) => {
   } catch (err) { next(err) }
 })
 
+// GET /api/invitations/project/:projectId — project ke saare invites (sent by anyone)
+router.get('/project/:projectId', async (req, res, next) => {
+  try {
+    const invitations = await Invitation.find({ project: req.params.projectId })
+      .populate('invitedBy', 'name')
+      .sort({ createdAt: -1 })
+
+    res.json({ invitations })
+  } catch (err) { next(err) }
+})
+
 module.exports = router

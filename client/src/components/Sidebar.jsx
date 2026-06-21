@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { logout, setActiveProject } from '../store/authSlice'
+import InviteStatusPanel from './InviteStatusPanel'
 
 const navItems = [
   { path: '/dashboard', icon: '⊞', label: 'Dashboard' },
@@ -18,6 +19,7 @@ export default function Sidebar() {
   const { user, projects, activeProject } = useSelector((state) => state.auth)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [projectMenuOpen, setProjectMenuOpen] = useState(false)
+  const [showInvitePanel, setShowInvitePanel] = useState(false)
 
   const handleSwitchProject = (project) => {
     dispatch(setActiveProject(project))
@@ -114,24 +116,32 @@ export default function Sidebar() {
       </nav>
 
       {/* User */}
-      <div className="p-3 border-t border-border">
-        <div className="flex items-center gap-2.5 px-2 py-2">
-          <div className="w-7 h-7 rounded-lg bg-accent/20 flex items-center justify-center text-accent text-xs font-bold">
-            {user?.name?.charAt(0).toUpperCase() || 'U'}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-xs font-medium text-text truncate">{user?.name || 'User'}</div>
-            <div className="text-xs text-muted truncate">{user?.email || ''}</div>
-          </div>
-          <button
-            onClick={() => dispatch(logout())}
-            className="text-muted hover:text-danger text-xs transition-colors"
-            title="Logout"
-          >
-            ⇥
-          </button>
-        </div>
-      </div>
+       {/* User */}
+<div className="p-3 border-t border-border">
+  <div className="flex items-center gap-2.5 px-2 py-2">
+    <div className="w-7 h-7 rounded-lg bg-accent/20 flex items-center justify-center text-accent text-xs font-bold">
+      {user?.name?.charAt(0).toUpperCase() || 'U'}
+    </div>
+    <div className="flex-1 min-w-0">
+      <div className="text-xs font-medium text-text truncate">{user?.name || 'User'}</div>
+      <div className="text-xs text-muted truncate">{user?.email || ''}</div>
+    </div>
+    <button
+      onClick={() => setShowInvitePanel(true)}
+      className="text-muted hover:text-accent text-sm transition-colors"
+      title="Invitations"
+    >
+      📨
+    </button>
+    <button
+      onClick={() => dispatch(logout())}
+      className="text-muted hover:text-danger text-xs transition-colors"
+      title="Logout"
+    >
+      ⇥
+    </button>
+  </div>
+</div>
     </div>
   )
 
@@ -173,6 +183,10 @@ export default function Sidebar() {
       }`}>
         <SidebarContent />
       </div>
+
+      {showInvitePanel && (
+     <InviteStatusPanel onClose={() => setShowInvitePanel(false)} />
+     )}
     </>
   )
 }
