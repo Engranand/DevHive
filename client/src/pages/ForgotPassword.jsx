@@ -79,20 +79,7 @@ export default function ForgotPassword() {
                 If an account exists for <span className="text-text">{email}</span>, you'll receive a reset link shortly.
               </p>
 
-              {/* MVP — dev token, email system aane tak */}
-              {devToken && (
-                <div className="bg-warning/5 border border-warning/20 rounded-lg p-3 mb-4">
-                  <div className="text-xs text-warning font-mono uppercase tracking-wider mb-2">
-                    ⚠ Dev Mode — No email system yet
-                  </div>
-                  <Link
-                    to={`/reset-password?token=${devToken}`}
-                    className="text-xs text-accent hover:underline break-all"
-                  >
-                    Click here to reset password →
-                  </Link>
-                </div>
-              )}
+            
             </>
           )}
 
