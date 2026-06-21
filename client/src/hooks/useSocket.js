@@ -7,9 +7,10 @@ export const useSocket = (projectId, onTaskMoved) => {
   useEffect(() => {
     if (!projectId) return
 
-    const socket = io('http://localhost:5000', {
-      auth: { token: localStorage.getItem('token') }
-    })
+    socketRef.current = io('https://devhive-cevz.onrender.com', {
+  auth: { token: localStorage.getItem('token') }
+})
+    
 
     socketRef.current = socket
 
